@@ -1,11 +1,5 @@
 """
-Database setup.
-
-Zero-config default: SQLite file on disk (medrecord.db). Works completely
-free with no external service.
-
-To use free-tier Postgres instead (Neon / Supabase), set DATABASE_URL in .env
-to the connection string they give you -- no code changes needed.
+Database setup for Supabase PostgreSQL & SQLite fallback.
 """
 import os
 from dotenv import load_dotenv
@@ -16,9 +10,23 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./medrecord.db")
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+# Fix Heroku / Supabase postgres:// -> postgresql:// for SQLAlchemy compatibility
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {"sslmode": "require"}
+
+# For PostgreSQL connections, add pool recycle and pre-ping to ensure stable connections
+engine_kwargs = {"connect_args": connect_args}
+if not DATABASE_URL.startswith("sqlite"):
+    engine_kwargs.update({
+        "pool_pre_ping": True,
+        "pool_recycle": 60,
+        "pool_size": 10,
+        "max_overflow": 20,
+    })
+
+engine = create_engine(DATABASE_URL, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

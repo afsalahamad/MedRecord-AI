@@ -4,6 +4,7 @@ import {
   Activity,
   User,
   Plus,
+  Trash2,
   FileText,
   Upload,
   Brain,
@@ -13,169 +14,56 @@ import {
   AlertCircle,
   X,
   Sparkles,
-  ChevronRight,
   Stethoscope,
   Loader2,
   AlertTriangle,
-  Heart,
-  Bot,
-  Pill,
   FileSearch,
-  BookOpen,
   FileCheck
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
-// Pre-loaded sample report for demo patient Eleanor Vance
-const MOCK_DEMO_REPORT = {
-  document_id: 101,
-  filename: "Heart_&_Kidney_Report_Jan2026.pdf",
-  doc_type: "discharge",
-  patient_name: "Eleanor Vance",
-  age: "68",
-  gender: "Female",
-  doctor: "Dr. Robert Vance, MD",
-  hospital: "Mercy General Hospital",
-  report_date: "2026-01-15",
-  raw_text: `PATIENT DISCHARGE SUMMARY & LAB REPORT
-Patient Name: Eleanor Vance | Age: 68 | Gender: Female
-Doctor: Dr. Robert Vance, MD | Hospital: Mercy General Hospital
-Report Date: 2026-01-15
-
-DIAGNOSES:
-1. Type 2 Diabetes Mellitus (E11.9)
-2. Essential Hypertension (I10)
-3. Chronic Kidney Disease, Stage 3a (N18.31)
-4. Hyperlipidemia (E78.5)
-
-MEDICATIONS:
-- Lisinopril 20mg PO once daily (Hypertension)
-- Metformin 1000mg PO twice daily with meals (Diabetes)
-- Spironolactone 25mg PO once daily in morning (Cardiology)
-- Atorvastatin 40mg PO once daily at bedtime (Lipid control)
-
-LAB RESULTS:
-- Serum Creatinine: 1.9 mg/dL (Reference: 0.6 - 1.2 mg/dL) [HIGH]
-- Calculated eGFR: 48 mL/min/1.73m² (Reference: 60 - 120 mL/min) [LOW]
-- Serum Potassium: 5.4 mEq/L (Reference: 3.5 - 5.0 mEq/L) [ELEVATED]
-- HbA1c: 7.1% (Reference: 4.0 - 5.6%) [CONTROLLED]
-
-ALLERGIES:
-- Penicillin G (Anaphylaxis)
-
-PROCEDURES:
-- 12-Lead Electrocardiogram (ECG)
-- Renal Ultrasound & Basic Metabolic Panel
-
-AI SUMMARY:
-Patient is a 68-year-old female admitted for blood pressure management. Medical history notable for Type 2 Diabetes, Essential Hypertension, CKD Stage 3a, and Hyperlipidemia.
-
-RECOMMENDATIONS:
-Serum Creatinine demonstrates a progressive upward trend (1.1 → 1.9 mg/dL over 12 months) with eGFR declining to 48 mL/min. Dual RAAS blockade (Lisinopril 20mg + Spironolactone 25mg) requires close electrolyte monitoring and nephrology consultation within 14 days.`,
-  ai_summary:
-    "68-year-old female admitted for blood pressure management. Medical history notable for Type 2 Diabetes, Essential Hypertension, CKD Stage 3a, and Hyperlipidemia.",
-  diagnoses_detail: [
-    {
-      name: "Chronic Kidney Disease, Stage 3a (ICD-10: N18.31)",
-      confidence: "High",
-      evidence: "Calculated eGFR 48 mL/min/1.73m² and persistent Serum Creatinine elevation (1.9 mg/dL).",
-      explanation: "Kidney function is moderately decreased, impairing the body's ability to filter waste from the blood."
-    },
-    {
-      name: "Type 2 Diabetes Mellitus (ICD-10: E11.9)",
-      confidence: "High",
-      evidence: "HbA1c 7.1% while taking Metformin 1000mg BID.",
-      explanation: "A chronic condition affecting how the body processes blood sugar (glucose)."
-    },
-    {
-      name: "Essential Hypertension (ICD-10: I10)",
-      confidence: "High",
-      evidence: "Blood pressure 138/86 mmHg; prescribed Lisinopril 20mg daily.",
-      explanation: "High blood pressure requiring daily antihypertensive medication."
-    },
-    {
-      name: "Hyperlipidemia (ICD-10: E78.5)",
-      confidence: "High",
-      evidence: "Prescribed Atorvastatin 40mg PO QD.",
-      explanation: "Elevated lipid/cholesterol levels in the blood managed with statin therapy."
-    }
-  ],
-  diagnoses: [
-    "Chronic Kidney Disease, Stage 3a (N18.31)",
-    "Type 2 Diabetes Mellitus (E11.9)",
-    "Essential Hypertension (I10)",
-    "Hyperlipidemia (E78.5)"
-  ],
-  abnormal_findings: [
-    {
-      finding: "Elevated Serum Creatinine (1.9 mg/dL, Ref: 0.6 – 1.2)",
-      importance: "Indicates reduced kidney filtration capacity. Requires monitoring and dose adjustments for renally cleared drugs."
-    },
-    {
-      finding: "Decreased eGFR Clearance (48 mL/min, Ref: 60 – 120)",
-      importance: "eGFR below 60 mL/min confirms Stage 3a Chronic Kidney Disease."
-    },
-    {
-      finding: "Elevated Serum Potassium (5.4 mEq/L, Ref: 3.5 – 5.0)",
-      importance: "Hyperkalemia risk increased due to combined Lisinopril + Spironolactone therapy in reduced kidney clearance."
-    }
-  ],
-  vitals: [
-    { name: "Blood Pressure", value: "138/86", unit: "mmHg", status: "Borderline High" },
-    { name: "Heart Rate", value: "76", unit: "bpm", status: "Normal" },
-    { name: "Oxygen Saturation", value: "98", unit: "%", status: "Normal" },
-    { name: "Temperature", value: "98.6", unit: "°F", status: "Normal" }
-  ],
-  medications: [
-    { name: "Lisinopril", dosage: "20mg", frequency: "once daily" },
-    { name: "Metformin", dosage: "1000mg", frequency: "twice daily with meals" },
-    { name: "Spironolactone", dosage: "25mg", frequency: "once daily in morning" },
-    { name: "Atorvastatin", dosage: "40mg", frequency: "once daily at bedtime" }
-  ],
-  laboratory_results: [
-    { test_name: "Serum Creatinine", value: "1.9", unit: "mg/dL", reference_low: "0.6", reference_high: "1.2", status: "High" },
-    { test_name: "eGFR Clearance", value: "48", unit: "mL/min", reference_low: "60", reference_high: "120", status: "Low" },
-    { test_name: "Serum Potassium", value: "5.4", unit: "mEq/L", reference_low: "3.5", reference_high: "5.0", status: "Elevated" },
-    { test_name: "HbA1c", value: "7.1", unit: "%", reference_low: "4.0", reference_high: "5.6", status: "Controlled" }
-  ],
-  allergies: ["Penicillin G (Anaphylaxis)"],
-  procedures: ["12-Lead Electrocardiogram", "Renal Ultrasound"],
-  recommendations:
-    "Serum Creatinine demonstrates a progressive upward trend (1.9 mg/dL) and hyperkalemia risk (K+ 5.4 mEq/L). Dual RAAS blockade (Lisinopril + Spironolactone) requires close electrolyte monitoring and nephrology consultation within 14 days."
-};
-
 const WELCOME_CHAT_MSG = {
   sender: "ai",
-  text: "👋 Welcome to MedRecord AI\n\nI'm your AI Medical Report Assistant. Upload a report or ask questions about the selected patient's uploaded medical records."
+  text: "Hello! Welcome to MedRecord AI.\n\nI'm your AI Medical Report Assistant. Upload a report or ask questions about the selected patient's medical records."
+};
+
+// Helper function to sanitize any leftover Markdown tags (###, **, ---, etc.)
+const cleanMarkdownText = (text) => {
+  if (!text) return "";
+  return text
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/__(.*?)__/g, "$1")
+    .replace(/_(.*?)_/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^[\-\*\_]{3,}\s*$/gm, "")
+    .replace(/^\s*[\*\-]\s+/gm, "• ")
+    .trim();
 };
 
 function App() {
-  // Patients list state
-  const [patients, setPatients] = useState([
-    { id: 1, name: "Eleanor Vance (Demo Patient)" },
-    { id: 2, name: "Arthur Pendelton (New Patient)" }
-  ]);
-  const [selectedPatientId, setSelectedPatientId] = useState(1);
+  // Patients list state (populated from Supabase PostgreSQL via FastAPI)
+  const [patients, setPatients] = useState([]);
+  const [selectedPatientId, setSelectedPatientId] = useState("");
   const [newPatientName, setNewPatientName] = useState("");
   const [showNewPatientModal, setShowNewPatientModal] = useState(false);
 
-  // Core Application UI State: "empty" (State 1) | "processing" (State 2) | "complete" (State 3)
-  const [appState, setAppState] = useState("complete");
-  const [processingStep, setProcessingStep] = useState(1); // 1 to 6
+  // Delete Patient state
+  const [showDeletePatientModal, setShowDeletePatientModal] = useState(false);
+  const [deletingPatient, setDeletingPatient] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
-  // Analysis & Document State per patient
-  const [patientAnalyses, setPatientAnalyses] = useState({
-    1: MOCK_DEMO_REPORT
-  });
-  const [patientReportsList, setPatientReportsList] = useState({
-    1: [{ id: 101, filename: "Heart_&_Kidney_Report_Jan2026.pdf", date: "2026-01-15" }]
-  });
+  // Core Application UI State: "empty" | "processing" | "complete"
+  const [appState, setAppState] = useState("empty");
+  const [processingStep, setProcessingStep] = useState(1);
 
-  // Selected file for upload
+  // Real Analysis Data per patient
+  const [patientAnalyses, setPatientAnalyses] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
 
-  // Raw text modal viewer
+  // Modal for raw text viewer
   const [viewDocModal, setViewDocModal] = useState(null);
 
   // Chat State
@@ -192,32 +80,88 @@ function App() {
     "Are there abnormal findings?"
   ];
 
-  // Fetch patient list from backend if available
-  useEffect(() => {
+  console.log(`[DEBUG LOG] Component render: selectedPatientId='${selectedPatientId}', appState='${appState}', hasAnalysis=${!!patientAnalyses[selectedPatientId]}`);
+
+  // Fetch patient list from backend
+  const fetchPatients = () => {
+    console.log("[DEBUG LOG] Fetching patients list from backend...");
     fetch(`${API}/patients`)
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        console.log("[DEBUG LOG] Patients fetch response:", data);
+        if (Array.isArray(data)) {
           setPatients(data);
+          if (data.length > 0 && !selectedPatientId) {
+            setSelectedPatientId(data[0].id);
+          }
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error("[DEBUG ERROR] Patients fetch failed:", err));
+  };
+
+  useEffect(() => {
+    fetchPatients();
   }, []);
 
-  // Update application UI state when selected patient changes
+  // Helper to fetch analysis from Supabase PostgreSQL
+  const fetchPatientAnalysis = (patientId) => {
+    if (!patientId) return;
+    console.log(`[DEBUG LOG] Fetching analysis from backend for patient ID '${patientId}'...`);
+    fetch(`${API}/patients/${patientId}/analysis`)
+      .then((r) => r.json())
+      .then((data) => {
+        console.log("[DEBUG LOG] Frontend fetch response (GET /analysis):", data);
+        if (data && data.document_id) {
+          console.log("[DEBUG LOG] React state update: setting patientAnalyses and appState to 'complete'");
+          setPatientAnalyses((prev) => ({ ...prev, [patientId]: data }));
+          setAppState("complete");
+        } else {
+          console.log("[DEBUG LOG] No analysis record found for patient, setting appState to 'empty'");
+          setAppState("empty");
+        }
+      })
+      .catch((err) => {
+        console.error("[DEBUG ERROR] Analysis fetch failed:", err);
+        setAppState("empty");
+      });
+  };
+
+  // Fetch analysis & chat history when selected patient changes
   useEffect(() => {
-    if (patientAnalyses[selectedPatientId]) {
-      setAppState("complete");
-    } else {
+    if (!selectedPatientId) {
       setAppState("empty");
+      setChatMessages([WELCOME_CHAT_MSG]);
+      return;
     }
-    // Reset chat history for newly selected patient
-    setChatMessages([WELCOME_CHAT_MSG]);
+
+    fetchPatientAnalysis(selectedPatientId);
+
+    // Fetch existing chat history from Supabase
+    fetch(`${API}/patients/${selectedPatientId}/chat`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const formattedHistory = [
+            WELCOME_CHAT_MSG,
+            ...data.flatMap((h) => [
+              { sender: "user", text: h.question },
+              { sender: "ai", text: h.answer }
+            ])
+          ];
+          setChatMessages(formattedHistory);
+        } else {
+          setChatMessages([WELCOME_CHAT_MSG]);
+        }
+      })
+      .catch(() => {
+        setChatMessages([WELCOME_CHAT_MSG]);
+      });
   }, [selectedPatientId]);
 
   // Create Patient (POST /patients)
   const handleCreatePatient = async () => {
     if (!newPatientName.trim()) return;
+    console.log("[DEBUG LOG] Creating patient:", newPatientName);
     try {
       const res = await fetch(`${API}/patients`, {
         method: "POST",
@@ -226,39 +170,79 @@ function App() {
       });
       if (res.ok) {
         const patient = await res.json();
+        console.log("[DEBUG LOG] Patient created:", patient);
         setPatients((prev) => [...prev, patient]);
         setSelectedPatientId(patient.id);
         setNewPatientName("");
         setShowNewPatientModal(false);
         setAppState("empty");
-        return;
+        setToastMessage("Patient created successfully.");
+        setTimeout(() => setToastMessage(""), 3500);
       }
-    } catch (e) {}
-
-    // Local fallback
-    const newP = { id: Date.now(), name: newPatientName };
-    setPatients((prev) => [...prev, newP]);
-    setSelectedPatientId(newP.id);
-    setNewPatientName("");
-    setShowNewPatientModal(false);
-    setAppState("empty");
+    } catch (e) {
+      console.error("[DEBUG ERROR] Error creating patient:", e);
+    }
   };
 
-  // Upload PDF -> State 2 (Processing) -> State 3 (Complete)
+  // Delete Patient (DELETE /patients/{patient_id})
+  const handleDeletePatient = async () => {
+    if (!selectedPatientId) return;
+    setDeletingPatient(true);
+    console.log(`[DEBUG LOG] Deleting patient '${selectedPatientId}'...`);
+    try {
+      const res = await fetch(`${API}/patients/${selectedPatientId}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        console.log(`[DEBUG LOG] Patient '${selectedPatientId}' deleted successfully.`);
+        setToastMessage("Patient deleted successfully.");
+        setTimeout(() => setToastMessage(""), 4000);
+
+        setShowDeletePatientModal(false);
+        setDeletingPatient(false);
+
+        // Remove deleted patient from local array
+        const remaining = patients.filter((p) => String(p.id) !== String(selectedPatientId));
+        setPatients(remaining);
+        setPatientAnalyses((prev) => {
+          const copy = { ...prev };
+          delete copy[selectedPatientId];
+          return copy;
+        });
+
+        // Clear selection & reset to empty state if no patients left or select next
+        const nextPatientId = remaining.length > 0 ? remaining[0].id : "";
+        setSelectedPatientId(nextPatientId);
+        if (!nextPatientId) {
+          setAppState("empty");
+          setChatMessages([WELCOME_CHAT_MSG]);
+        }
+        return;
+      } else {
+        const errText = await res.text();
+        console.error("[DEBUG ERROR] Delete patient API error:", errText);
+        alert(`Failed to delete patient: ${errText}`);
+      }
+    } catch (err) {
+      console.error("[DEBUG ERROR] Delete patient network error:", err);
+      alert("Failed to delete patient due to network error.");
+    }
+    setDeletingPatient(false);
+  };
+
+  // Upload PDF -> Supabase Storage -> Gemini OCR -> Analysis State
   const handleUploadPDF = async (fileObj) => {
     const file = fileObj || selectedFile;
     if (!file || !selectedPatientId) return;
 
-    // Transition to STATE 2: Processing
+    console.log(`[DEBUG LOG] Upload started: filename='${file.name}', patient_id='${selectedPatientId}'`);
     setAppState("processing");
     setProcessingStep(1);
 
-    // Animated Checklist Progress Steps:
-    // 1: Uploading Report... -> 2: Extracting Text... -> 3: Running OCR... -> 4: Analyzing with Gemini... -> 5: Generating AI Summary... -> 6: Completed
-    setTimeout(() => setProcessingStep(2), 500);
-    setTimeout(() => setProcessingStep(3), 1000);
-    setTimeout(() => setProcessingStep(4), 1600);
-    setTimeout(() => setProcessingStep(5), 2200);
+    setTimeout(() => setProcessingStep(2), 600);
+    setTimeout(() => setProcessingStep(3), 1200);
+    setTimeout(() => setProcessingStep(4), 1800);
+    setTimeout(() => setProcessingStep(5), 2400);
 
     const form = new FormData();
     form.append("file", file);
@@ -269,15 +253,17 @@ function App() {
         body: form
       });
 
+      console.log(`[DEBUG LOG] Upload completed: status=${res.status}`);
       if (res.ok) {
         const data = await res.json();
+        console.log("[DEBUG LOG] API response (POST /documents):", data);
         const extracted = data.extracted || {};
 
         const newAnalysis = {
           document_id: data.document_id,
           filename: file.name,
           doc_type: extracted.doc_type || "medical_report",
-          patient_name: extracted.patient_name || patients.find((p) => p.id === selectedPatientId)?.name || "Patient Record",
+          patient_name: extracted.patient_name || patients.find((p) => String(p.id) === String(selectedPatientId))?.name || "Patient Record",
           age: extracted.age || null,
           gender: extracted.gender || null,
           doctor: extracted.doctor || extracted.provider || "Attending Physician",
@@ -296,150 +282,36 @@ function App() {
           recommendations: extracted.recommendations || extracted.recommendation || ""
         };
 
+        setProcessingStep(6);
         setTimeout(() => {
-          setProcessingStep(6);
-          setTimeout(() => {
-            setPatientAnalyses((prev) => ({ ...prev, [selectedPatientId]: newAnalysis }));
-            setPatientReportsList((prev) => ({
-              ...prev,
-              [selectedPatientId]: [
-                { id: data.document_id, filename: file.name, date: newAnalysis.report_date },
-                ...(prev[selectedPatientId] || [])
-              ]
-            }));
-            setSelectedFile(null);
-            setAppState("complete");
-          }, 400);
-        }, 2800);
+          console.log("[DEBUG LOG] React state update: setting patientAnalyses and appState='complete'");
+          setPatientAnalyses((prev) => ({ ...prev, [selectedPatientId]: newAnalysis }));
+          setSelectedFile(null);
+          setAppState("complete");
+          // Re-sync with Supabase PostgreSQL
+          fetchPatientAnalysis(selectedPatientId);
+        }, 500);
         return;
+      } else {
+        const errText = await res.text();
+        console.error("[DEBUG ERROR] API error response:", errText);
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error("[DEBUG ERROR] Upload network/execution error:", err);
+    }
 
-    // Fallback simulation for mock demo
-    setTimeout(() => {
-      setProcessingStep(6);
-      setTimeout(() => {
-        const uploadedDoc = {
-          document_id: Date.now(),
-          filename: file.name,
-          doc_type: "lab_report",
-          patient_name: patients.find((p) => p.id === selectedPatientId)?.name || "Selected Patient",
-          age: "52",
-          gender: "Female",
-          doctor: "Dr. Sarah Lin, MD",
-          hospital: "University Medical Center",
-          report_date: new Date().toISOString().split("T")[0],
-          raw_text: MOCK_DEMO_REPORT.raw_text,
-          ai_summary: `Newly uploaded medical report (${file.name}). Processed via automatic pypdf text extraction & Gemini 2.5 Flash.`,
-          diagnoses_detail: [
-            {
-              name: "Essential Hypertension (ICD-10: I10)",
-              confidence: "High",
-              evidence: "Blood pressure 138/86 mmHg, prescribed Lisinopril 10mg daily",
-              explanation: "High blood pressure requiring routine daily medication."
-            },
-            {
-              name: "Type 2 Diabetes Mellitus (ICD-10: E11.9)",
-              confidence: "High",
-              evidence: "Fasting Blood Glucose 135 mg/dL on Metformin 500mg BID",
-              explanation: "Elevated blood sugar managed with oral diabetic therapy."
-            }
-          ],
-          diagnoses: [
-            "Essential Hypertension (ICD-10: I10)",
-            "Type 2 Diabetes Mellitus (ICD-10: E11.9)"
-          ],
-          abnormal_findings: [
-            {
-              finding: "Elevated Serum Creatinine (1.3 mg/dL)",
-              importance: "Slightly elevated kidney filtration marker; warrants routine repeat testing."
-            },
-            {
-              finding: "Fasting Blood Glucose Elevated (135 mg/dL)",
-              importance: "Above normal fasting reference interval (70 – 99 mg/dL)."
-            }
-          ],
-          vitals: [
-            { name: "Blood Pressure", value: "128/78", unit: "mmHg", status: "Normal" },
-            { name: "Heart Rate", value: "72", unit: "bpm", status: "Normal" }
-          ],
-          medications: [
-            { name: "Lisinopril", dosage: "10mg", frequency: "once daily" },
-            { name: "Metformin", dosage: "500mg", frequency: "twice daily" }
-          ],
-          laboratory_results: [
-            { test_name: "Serum Creatinine", value: "1.3", unit: "mg/dL", reference_low: "0.6", reference_high: "1.2", status: "High" },
-            { test_name: "Fasting Blood Glucose", value: "135", unit: "mg/dL", reference_low: "70", reference_high: "99", status: "Elevated" }
-          ],
-          allergies: ["Penicillin G"],
-          procedures: ["Routine Blood Draw"],
-          recommendations: "Maintain fasting blood glucose log and repeat serum creatinine in 30 days."
-        };
-
-        setPatientAnalyses((prev) => ({ ...prev, [selectedPatientId]: uploadedDoc }));
-        setPatientReportsList((prev) => ({
-          ...prev,
-          [selectedPatientId]: [
-            { id: uploadedDoc.document_id, filename: file.name, date: uploadedDoc.report_date },
-            ...(prev[selectedPatientId] || [])
-          ]
-        }));
-        setSelectedFile(null);
-        setAppState("complete");
-      }, 400);
-    }, 2800);
+    setAppState("empty");
   };
 
   // Patient AI Chat Handler
   const handleAskAI = async (queryText) => {
     const q = queryText || inputQuery;
-    if (!q.trim() || chatLoading) return;
+    if (!q.trim() || chatLoading || !selectedPatientId) return;
 
     setChatMessages((prev) => [...prev, { sender: "user", text: q }]);
     if (!queryText) setInputQuery("");
     setChatLoading(true);
 
-    const qClean = q.trim().toLowerCase().replace(/[^\w\s]/g, "");
-
-    // 1. Greetings Handler
-    const greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "how are you", "whats up"];
-    if (greetings.some((g) => qClean === g || qClean.startsWith(g))) {
-      setTimeout(() => {
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            sender: "ai",
-            text: "Hello! 👋 I'm your AI Medical Assistant. How can I help you today? If you've uploaded a medical report, I can summarize it, explain diagnoses, review lab results, or answer questions about the patient's records."
-          }
-        ]);
-        setChatLoading(false);
-      }, 300);
-      return;
-    }
-
-    // 2. Off-Topic Guardrail
-    const offTopicKeywords = [
-      "movie", "sport", "football", "cricket", "basketball", "politics", "president",
-      "election", "joke", "code", "python", "javascript", "react", "math", "calculator",
-      "weather", "recipe", "song", "music", "celebrity", "actor", "game"
-    ];
-    const isOffTopic = offTopicKeywords.some((k) => qClean.includes(k)) && !qClean.includes("lab") && !qClean.includes("report");
-
-    if (isOffTopic) {
-      setTimeout(() => {
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            sender: "ai",
-            text: "I'm your Medical AI Assistant. I can help explain diagnoses, medications, laboratory results, medical summaries, and other information from the uploaded medical reports."
-          }
-        ]);
-        setChatLoading(false);
-      }, 300);
-      return;
-    }
-
-    // 3. Query Backend Endpoint /patients/{id}/chat
     try {
       const res = await fetch(`${API}/patients/${selectedPatientId}/chat`, {
         method: "POST",
@@ -452,74 +324,44 @@ function App() {
         setChatLoading(false);
         return;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("[DEBUG ERROR] Chat error:", e);
+    }
 
-    // 4. Grounded Fallback Response using actual report content
-    setTimeout(() => {
-      const current = patientAnalyses[selectedPatientId];
-      let responseText = "";
-
-      if (!current) {
-        responseText = "This information is not present in the uploaded medical reports.";
-      } else if (qClean.includes("medication") || qClean.includes("drug") || qClean.includes("prescribed") || qClean.includes("taking")) {
-        const meds = current.medications || [];
-        if (meds.length > 0) {
-          responseText = `Based on the uploaded report (**${current.filename}**), the active medications are:\n` +
-            meds.map((m) => `• **${m.name}**: ${m.dosage || ""} ${m.frequency || ""}`).join("\n");
-        } else {
-          responseText = "This information is not present in the uploaded medical reports.";
-        }
-      } else if (qClean.includes("diagnosis") || qClean.includes("diagnoses") || qClean.includes("condition")) {
-        const diagsDetailed = current.diagnoses_detail || [];
-        const diagsSimple = current.diagnoses || [];
-        if (diagsDetailed.length > 0) {
-          responseText = `The uploaded medical report lists the following diagnoses:\n\n` +
-            diagsDetailed.map((d) => `• **${d.name}**\n  *Evidence:* "${d.evidence || "Extracted from report"}"\n  *Note:* ${d.explanation || ""}`).join("\n\n");
-        } else if (diagsSimple.length > 0) {
-          responseText = `The uploaded report lists the following diagnoses:\n` +
-            diagsSimple.map((d, i) => `${i + 1}. **${typeof d === "object" ? d.name : d}**`).join("\n");
-        } else {
-          responseText = "This information is not present in the uploaded medical reports.";
-        }
-      } else if (qClean.includes("abnormal") || qClean.includes("creatinine") || qClean.includes("potassium") || qClean.includes("value")) {
-        const abnormal = current.abnormal_findings || [];
-        const labs = current.laboratory_results || current.lab_results || [];
-        const abnormalLabs = labs.filter((l) => l.status === "High" || l.status === "Elevated" || l.status === "Low");
-
-        if (abnormal.length > 0) {
-          responseText = `**Abnormal Findings Identified in Report:**\n\n` +
-            abnormal.map((a) => `• **${a.finding}:** ${a.importance}`).join("\n\n");
-        } else if (abnormalLabs.length > 0) {
-          responseText = `**Abnormal Laboratory Values:**\n\n` +
-            abnormalLabs.map((l) => `• **${l.test_name || l.test}:** ${l.value} ${l.unit} [${l.status}] (Reference: ${l.reference_low || "0.6"} – ${l.reference_high || "1.2"})`).join("\n");
-        } else {
-          responseText = "No abnormal findings were recorded in the uploaded report.";
-        }
-      } else if (qClean.includes("summary") || qClean.includes("summarize") || qClean.includes("report")) {
-        responseText = `**Report Summary for ${current.patient_name || "Patient"}:**\n${current.ai_summary || current.patient_summary}`;
-      } else if (qClean.includes("lab") || qClean.includes("result") || qClean.includes("test")) {
-        const labs = current.laboratory_results || current.lab_results || [];
-        if (labs.length > 0) {
-          responseText = `**Laboratory Results from Report:**\n\n` +
-            labs.map((l) => `• **${l.test_name || l.test}:** ${l.value} ${l.unit} ${l.status ? `[${l.status}]` : ""}`).join("\n");
-        } else {
-          responseText = "This information is not present in the uploaded medical reports.";
-        }
-      } else {
-        responseText = "This information is not present in the uploaded medical reports.";
-      }
-
-      setChatMessages((prev) => [...prev, { sender: "ai", text: responseText }]);
-      setChatLoading(false);
-    }, 400);
+    setChatMessages((prev) => [
+      ...prev,
+      { sender: "ai", text: "Unable to query records. Please ensure a medical report is uploaded for this patient." }
+    ]);
+    setChatLoading(false);
   };
 
   const currentAnalysis = patientAnalyses[selectedPatientId];
-  const recentReports = patientReportsList[selectedPatientId] || [];
   const labsList = currentAnalysis?.laboratory_results || currentAnalysis?.lab_results || [];
 
   return (
     <div>
+      {/* Success Toast Notification */}
+      {toastMessage && (
+        <div style={{
+          position: "fixed",
+          top: 24,
+          right: 24,
+          zIndex: 9999,
+          background: "#10B981",
+          color: "#FFFFFF",
+          padding: "12px 20px",
+          borderRadius: 10,
+          boxShadow: "0 10px 25px -5px rgba(0,0,0,0.2)",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          fontWeight: 600,
+          fontSize: 14
+        }}>
+          <CheckCircle2 size={18} /> {toastMessage}
+        </div>
+      )}
+
       {/* App Header Navbar */}
       <header className="app-header">
         <div className="app-header__brand">
@@ -528,114 +370,133 @@ function App() {
           </div>
           <div>
             <h1 className="app-header__title">MedRecord AI</h1>
-            <div className="app-header__subtitle">AI Medical Report Assistant</div>
+            <div className="app-header__subtitle">AI Medical Report Assistant (Supabase Edition)</div>
           </div>
         </div>
 
         <div className="app-badge">
           <span className="pulse-dot" />
-          AI Powered Analysis
+          Live Database & Storage
         </div>
       </header>
 
       {/* Main Container */}
       <main className="app-container">
 
-        {/* Patient Selector Bar (ALWAYS SHOWN) */}
+        {/* Patient Selector Bar */}
         <section className="app-card" style={{ padding: "18px 24px" }}>
           <div className="patient-bar">
             <div className="patient-bar__select-group">
               <span className="patient-bar__label">
-                <User size={18} style={{ color: "var(--primary-blue)" }} /> Patient
+                <User size={18} style={{ color: "var(--primary-blue)" }} /> Patient:
               </span>
               <select
                 className="patient-select"
                 value={selectedPatientId}
-                onChange={(e) => setSelectedPatientId(Number(e.target.value))}
+                onChange={(e) => setSelectedPatientId(e.target.value)}
               >
-                {patients.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
+                {patients.length === 0 ? (
+                  <option value="">No Patients Created Yet</option>
+                ) : (
+                  patients.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
-            <button className="btn btn--secondary" onClick={() => setShowNewPatientModal(true)}>
-              <Plus size={16} /> New Patient
-            </button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn--secondary" onClick={() => setShowNewPatientModal(true)}>
+                <Plus size={16} /> New Patient
+              </button>
+
+              <button
+                className="btn"
+                style={{ background: "#FEE2E2", color: "#DC2626", border: "1px solid #FCA5A5" }}
+                disabled={!selectedPatientId || patients.length === 0}
+                onClick={() => setShowDeletePatientModal(true)}
+              >
+                <Trash2 size={16} /> Delete Patient
+              </button>
+            </div>
           </div>
         </section>
 
         {/* ============================================================
-            STATE 1: BEFORE REPORT UPLOAD (Clean, Spacious MVP State)
+            STATE 1: EMPTY STATE (No Patients or No Reports Uploaded Yet)
            ============================================================ */}
         {appState === "empty" && (
           <section className="upload-card-box">
-            {/* Title & Short Description Header */}
             <div className="empty-hero">
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
                 <div className="app-header__logo" style={{ width: 52, height: 52, borderRadius: 16 }}>
                   <Brain size={30} />
                 </div>
               </div>
-              <h2 className="empty-hero__title">MedRecord AI</h2>
+              <h2 className="empty-hero__title">
+                {patients.length === 0 ? "Create a Patient to Begin" : "Upload Medical Report"}
+              </h2>
               <div className="empty-hero__subtitle">AI Medical Report Assistant</div>
-              <p className="empty-hero__desc">Analyze medical reports using AI</p>
-            </div>
-
-            {/* Upload Area Box */}
-            <div
-              className="upload-dropzone"
-              onClick={() => document.getElementById("report-file-input").click()}
-            >
-              <div className="dropzone-icon-circle">
-                <FileText size={28} />
-              </div>
-
-              <h3 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 700, color: "var(--text-main)" }}>
-                {selectedFile ? selectedFile.name : "Upload Medical Report"}
-              </h3>
-
-              <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--text-muted)" }}>
-                Large Drag & Drop Upload Area or Choose File
+              <p className="empty-hero__desc">
+                {patients.length === 0
+                  ? "Start by creating a new patient above, then upload their PDF medical reports."
+                  : "Upload a PDF or image medical report to extract findings and analyze with Gemini AI."}
               </p>
-
-              <button className="btn btn--secondary" style={{ pointerEvents: "none" }}>
-                Choose PDF
-              </button>
-
-              <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-muted)" }}>
-                Supported Format: <strong>PDF, PNG, JPG</strong>
-              </div>
-
-              <input
-                id="report-file-input"
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg"
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setSelectedFile(e.target.files[0]);
-                  }
-                }}
-              />
             </div>
 
-            <div style={{ marginTop: 10 }}>
-              <button
-                className="btn"
-                style={{ padding: "12px 32px", fontSize: 15 }}
-                disabled={!selectedFile}
-                onClick={() => handleUploadPDF(selectedFile)}
-              >
-                <Upload size={18} /> Upload & Analyze Report
-              </button>
-            </div>
+            {patients.length > 0 && (
+              <>
+                <div
+                  className="upload-dropzone"
+                  onClick={() => document.getElementById("report-file-input").click()}
+                >
+                  <div className="dropzone-icon-circle">
+                    <FileText size={28} />
+                  </div>
 
-            <p style={{ marginTop: 18, fontSize: 13, color: "var(--text-muted)" }}>
-              Upload a medical report to begin AI analysis.
-            </p>
+                  <h3 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 700, color: "var(--text-main)" }}>
+                    {selectedFile ? selectedFile.name : "Choose or Drag Medical Report PDF"}
+                  </h3>
+
+                  <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--text-muted)" }}>
+                    Files will be securely stored in Supabase Storage & parsed by Gemini Vision.
+                  </p>
+
+                  <button className="btn btn--secondary" style={{ pointerEvents: "none" }}>
+                    Select PDF File
+                  </button>
+
+                  <div style={{ marginTop: 12, fontSize: 12, color: "var(--text-muted)" }}>
+                    Supported Format: <strong>PDF, PNG, JPG</strong>
+                  </div>
+
+                  <input
+                    id="report-file-input"
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setSelectedFile(e.target.files[0]);
+                      }
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginTop: 16 }}>
+                  <button
+                    className="btn"
+                    style={{ padding: "12px 32px", fontSize: 15 }}
+                    disabled={!selectedFile || !selectedPatientId}
+                    onClick={() => handleUploadPDF(selectedFile)}
+                  >
+                    <Upload size={18} /> Upload & Analyze Report
+                  </button>
+                </div>
+              </>
+            )}
           </section>
         )}
 
@@ -649,17 +510,17 @@ function App() {
             </div>
 
             <h3 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700, color: "var(--text-main)" }}>
-              Analyzing Report with Gemini AI...
+              Processing & Storing in Supabase...
             </h3>
 
             <p style={{ margin: 0, fontSize: 14, color: "var(--text-muted)" }}>
-              Please wait while we extract and structure your medical report findings.
+              Uploading PDF to Supabase Storage and extracting clinical JSON with Gemini Vision OCR.
             </p>
 
             <div className="progress-checklist">
               <div className={`checklist-step ${processingStep >= 1 ? (processingStep > 1 ? "checklist-step--completed" : "checklist-step--active") : ""}`}>
                 {processingStep > 1 ? <CheckCircle2 size={18} /> : <div className="spin-icon"><Loader2 size={18} /></div>}
-                <span>Uploading Report...</span>
+                <span>Uploading to Supabase Storage...</span>
               </div>
 
               <div className={`checklist-step ${processingStep >= 2 ? (processingStep > 2 ? "checklist-step--completed" : "checklist-step--active") : ""}`}>
@@ -669,17 +530,17 @@ function App() {
 
               <div className={`checklist-step ${processingStep >= 3 ? (processingStep > 3 ? "checklist-step--completed" : "checklist-step--active") : ""}`}>
                 {processingStep > 3 ? <CheckCircle2 size={18} /> : processingStep === 3 ? <div className="spin-icon"><Loader2 size={18} /></div> : <FileSearch size={18} />}
-                <span>Running OCR (only if necessary)...</span>
+                <span>Running Gemini Vision OCR...</span>
               </div>
 
               <div className={`checklist-step ${processingStep >= 4 ? (processingStep > 4 ? "checklist-step--completed" : "checklist-step--active") : ""}`}>
                 {processingStep > 4 ? <CheckCircle2 size={18} /> : processingStep === 4 ? <div className="spin-icon"><Loader2 size={18} /></div> : <Brain size={18} />}
-                <span>Analyzing with Gemini...</span>
+                <span>Extracting Clinical Entities...</span>
               </div>
 
               <div className={`checklist-step ${processingStep >= 5 ? (processingStep > 5 ? "checklist-step--completed" : "checklist-step--active") : ""}`}>
                 {processingStep > 5 ? <CheckCircle2 size={18} /> : processingStep === 5 ? <div className="spin-icon"><Loader2 size={18} /></div> : <Sparkles size={18} />}
-                <span>Generating AI Summary...</span>
+                <span>Saving to Supabase PostgreSQL...</span>
               </div>
 
               <div className={`checklist-step ${processingStep >= 6 ? "checklist-step--completed" : ""}`}>
@@ -691,14 +552,13 @@ function App() {
         )}
 
         {/* ============================================================
-            STATE 3: ANALYSIS COMPLETE (Clean Structured View & AI Chat)
+            STATE 3: ANALYSIS COMPLETE (Real Data from Supabase)
            ============================================================ */}
         {appState === "complete" && currentAnalysis && (
           <>
-            {/* Header Controls Bar */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span className="app-badge" style={{ background: "var(--badge-green-soft)", color: "var(--badge-green)", borderColor: "var(--badge-green-border)" }}>
-                <CheckCircle2 size={14} /> Analysis Complete
+                <CheckCircle2 size={14} /> Real Database Record (Supabase)
               </span>
 
               <button
@@ -710,7 +570,7 @@ function App() {
               </button>
             </div>
 
-            {/* 🧠 AI Summary Section */}
+            {/* AI Summary Section */}
             <section className="app-card" style={{ borderLeft: "5px solid var(--primary-blue)" }}>
               <div className="app-card__header">
                 <div>
@@ -719,7 +579,7 @@ function App() {
                     🧠 AI Summary
                   </h3>
                   <span style={{ fontSize: 12.5, color: "var(--text-muted)", marginTop: 2, display: "block" }}>
-                    Source: <strong>{currentAnalysis.filename}</strong> ({currentAnalysis.report_date || currentAnalysis.visit_date})
+                    Source File: <strong>{currentAnalysis.filename}</strong> ({currentAnalysis.report_date})
                   </span>
                 </div>
 
@@ -728,79 +588,48 @@ function App() {
                   style={{ padding: "6px 12px", fontSize: 12 }}
                   onClick={() => setViewDocModal(currentAnalysis)}
                 >
-                  View Full Text
+                  View Raw Text
                 </button>
               </div>
 
               {/* Patient Demographics Banner */}
               {(currentAnalysis.patient_name || currentAnalysis.doctor || currentAnalysis.hospital) && (
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 18, background: "var(--bg-app)", padding: "10px 16px", borderRadius: 8, fontSize: 13 }}>
-                  {currentAnalysis.patient_name && <span><strong>Patient:</strong> {currentAnalysis.patient_name} {currentAnalysis.age ? `(${currentAnalysis.age}y)` : ""}</span>}
-                  {currentAnalysis.doctor && <span><strong>Doctor:</strong> {currentAnalysis.doctor}</span>}
-                  {currentAnalysis.hospital && <span><strong>Hospital:</strong> {currentAnalysis.hospital}</span>}
+                  {currentAnalysis.patient_name && <span><strong>Patient:</strong> {currentAnalysis.patient_name}</span>}
+                  {currentAnalysis.doctor && <span><strong>Doctor/Provider:</strong> {currentAnalysis.doctor}</span>}
+                  {currentAnalysis.hospital && <span><strong>Facility:</strong> {currentAnalysis.hospital}</span>}
                 </div>
               )}
 
               {/* Overall Summary Callout */}
               <div className="analysis-overall-card">
                 <strong style={{ color: "var(--primary-blue)", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.03em", display: "flex", alignItems: "center", gap: 6 }}>
-                  <Sparkles size={16} /> Overall Summary
+                  <Sparkles size={16} /> Clinical Summary
                 </strong>
                 <p style={{ margin: "8px 0 0", fontSize: 14.5, color: "var(--text-main)", lineHeight: 1.6 }}>
-                  {currentAnalysis.ai_summary || currentAnalysis.overall_summary || currentAnalysis.patient_summary}
+                  {cleanMarkdownText(currentAnalysis.ai_summary) || "Report parsed successfully."}
                 </p>
               </div>
 
-              {/* Diagnoses Section (Smart Visibility) */}
-              {((currentAnalysis.diagnoses_detail && currentAnalysis.diagnoses_detail.length > 0) || (currentAnalysis.diagnoses && currentAnalysis.diagnoses.length > 0)) && (
+              {/* Diagnoses Section */}
+              {currentAnalysis.diagnoses && currentAnalysis.diagnoses.length > 0 && (
                 <div style={{ marginBottom: 24 }}>
                   <h4 className="analysis-section-title">
                     <CheckCircle2 size={18} style={{ color: "var(--primary-blue)" }} /> Diagnoses
                   </h4>
-
-                  {currentAnalysis.diagnoses_detail && currentAnalysis.diagnoses_detail.length > 0 ? (
-                    <div>
-                      {currentAnalysis.diagnoses_detail.map((d, i) => (
-                        <div key={i} className="diagnosis-item-card">
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <strong style={{ fontSize: 14.5, color: "var(--text-main)" }}>{d.name}</strong>
-                            <span
-                              className="app-badge"
-                              style={{
-                                fontSize: 11,
-                                padding: "2px 8px",
-                                background: d.confidence === "High" ? "var(--badge-green-soft)" : "var(--badge-amber-soft)",
-                                color: d.confidence === "High" ? "var(--badge-green)" : "var(--badge-amber)",
-                                borderColor: d.confidence === "High" ? "var(--badge-green-border)" : "var(--badge-amber-border)"
-                              }}
-                            >
-                              {d.confidence} Confidence
-                            </span>
-                          </div>
-                          {d.evidence && (
-                            <div style={{ fontSize: 12.5, color: "var(--text-muted)", marginTop: 4, fontStyle: "italic" }}>
-                              Evidence: "{d.evidence}"
-                            </div>
-                          )}
-                          {d.explanation && (
-                            <div style={{ fontSize: 13, color: "var(--text-soft)", marginTop: 6, lineHeight: 1.5 }}>
-                              {d.explanation}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <ul className="list-styled">
-                      {currentAnalysis.diagnoses.map((d, i) => (
-                        <li key={i}>{typeof d === "object" ? d.name : d}</li>
-                      ))}
-                    </ul>
-                  )}
+                  <ul className="list-styled">
+                    {currentAnalysis.diagnoses.map((d, i) => (
+                      <li key={i}>
+                        <strong>{typeof d === "object" ? d.name : d}</strong>
+                        {typeof d === "object" && d.code ? ` (ICD-10: ${d.code})` : ""}
+                        {typeof d === "object" && d.explanation ? ` — ${d.explanation}` : ""}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
-              {/* Abnormal Findings Section (Smart Visibility) */}
+              {/* Abnormal Findings */}
               {currentAnalysis.abnormal_findings && currentAnalysis.abnormal_findings.length > 0 && (
                 <div style={{ marginBottom: 24, background: "var(--badge-red-soft)", border: "1px solid var(--badge-red-border)", borderRadius: 12, padding: 16 }}>
                   <h4 style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 700, color: "var(--badge-red)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -809,19 +638,18 @@ function App() {
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     {currentAnalysis.abnormal_findings.map((a, i) => (
                       <div key={i} style={{ background: "#FFFFFF", padding: 10, borderRadius: 8, border: "1px solid #FECACA" }}>
-                        <strong style={{ fontSize: 13.5, color: "#991B1B" }}>{a.finding}</strong>
-                        <div style={{ fontSize: 12.5, color: "var(--text-soft)", marginTop: 2 }}>
-                          {a.importance}
-                        </div>
+                        <strong style={{ fontSize: 13.5, color: "#991B1B" }}>{typeof a === "object" ? a.finding : a}</strong>
+                        {typeof a === "object" && a.importance && (
+                          <div style={{ fontSize: 12.5, color: "var(--text-soft)", marginTop: 2 }}>{a.importance}</div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Structured Grid: Medications & Labs (Smart Visibility) */}
+              {/* Structured Grid: Medications & Labs */}
               <div className="analysis-grid">
-                {/* Current Medications */}
                 {currentAnalysis.medications && currentAnalysis.medications.length > 0 && (
                   <div className="section-box">
                     <div className="section-box__title">
@@ -839,58 +667,44 @@ function App() {
                   </div>
                 )}
 
-                {/* Laboratory Results */}
                 {labsList && labsList.length > 0 && (
                   <div className="section-box">
                     <div className="section-box__title">
                       <Activity size={16} /> Laboratory Results
                     </div>
                     <ul className="list-styled">
-                      {labsList.map((l, i) => {
-                        const test = l.test_name || l.test;
-                        const refStr = l.reference || (l.reference_low ? `${l.reference_low} – ${l.reference_high}` : "");
-                        const isAbnormal = l.status === "High" || l.status === "Elevated" || l.status === "Low";
-                        return (
-                          <li key={i}>
-                            {test}:{" "}
-                            <span className="val-badge" style={{ fontWeight: 600, color: isAbnormal ? "var(--badge-red)" : "inherit" }}>
-                              {l.value} {l.unit}
-                            </span>{" "}
-                            {refStr && <span style={{ fontSize: 12, color: "var(--text-muted)" }}>(ref {refStr})</span>}
-                            {l.status && (
-                              <span style={{ fontSize: 11, marginLeft: 6, color: isAbnormal ? "var(--badge-red)" : "var(--badge-green)", fontWeight: 600 }}>
-                                [{l.status}]
-                              </span>
-                            )}
-                          </li>
-                        );
-                      })}
+                      {labsList.map((l, i) => (
+                        <li key={i}>
+                          {l.test_name || l.test}:{" "}
+                          <span className="val-badge" style={{ fontWeight: 600 }}>
+                            {l.value} {l.unit}
+                          </span>{" "}
+                          {(l.reference_low || l.reference_high) && (
+                            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                              (ref {l.reference_low} – {l.reference_high})
+                            </span>
+                          )}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 )}
               </div>
 
-              {/* Recommendations (Smart Visibility) */}
+              {/* Recommendations */}
               {currentAnalysis.recommendations && currentAnalysis.recommendations.trim() !== "" && (
                 <div style={{ marginTop: 20, background: "var(--badge-amber-soft)", border: "1px solid var(--badge-amber-border)", borderRadius: 12, padding: 16 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--badge-amber)", margin: "0 0 6px", display: "flex", alignItems: "center", gap: 6 }}>
                     <Sparkles size={16} /> Recommendations
                   </div>
                   <p style={{ margin: 0, fontSize: 13.5, color: "#854D0E", lineHeight: 1.55 }}>
-                    {currentAnalysis.recommendations}
+                    {cleanMarkdownText(currentAnalysis.recommendations)}
                   </p>
-                </div>
-              )}
-
-              {/* Allergies Footer (Smart Visibility) */}
-              {currentAnalysis.allergies && currentAnalysis.allergies.length > 0 && (
-                <div style={{ marginTop: 18, paddingTop: 12, borderTop: "1px dashed var(--border-color)", fontSize: 13 }}>
-                  <strong style={{ color: "var(--badge-red)" }}>Allergies:</strong> {currentAnalysis.allergies.join(", ")}
                 </div>
               )}
             </section>
 
-            {/* 🤖 Ask MedRecord AI (ChatGPT-style Chat) */}
+            {/* Ask MedRecord AI Chat */}
             <section className="app-card">
               <div className="app-card__header">
                 <h3 className="app-card__title">
@@ -900,7 +714,6 @@ function App() {
               </div>
 
               <div className="chat-container">
-                {/* Suggested Questions Chips */}
                 <div className="prompt-chips-row">
                   <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600, marginRight: 4 }}>
                     Suggested Questions:
@@ -916,7 +729,6 @@ function App() {
                   ))}
                 </div>
 
-                {/* Chat History List */}
                 <div className="chat-history">
                   {chatMessages.map((msg, idx) => (
                     <div
@@ -926,7 +738,9 @@ function App() {
                       <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.8, marginBottom: 4, textTransform: "uppercase" }}>
                         {msg.sender === "user" ? "You" : "MedRecord AI Assistant"}
                       </div>
-                      <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
+                      <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                        {msg.sender === "ai" ? cleanMarkdownText(msg.text) : msg.text}
+                      </div>
                     </div>
                   ))}
 
@@ -937,11 +751,10 @@ function App() {
                   )}
                 </div>
 
-                {/* Chat Input */}
                 <div className="chat-input-bar">
                   <input
                     className="chat-input-field"
-                    placeholder="Ask a question about the uploaded medical report..."
+                    placeholder="Ask a question about the uploaded medical records..."
                     value={inputQuery}
                     onChange={(e) => setInputQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAskAI()}
@@ -963,7 +776,7 @@ function App() {
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h3 style={{ margin: 0, fontSize: 18, color: "var(--text-main)" }}>
-                Create Patient
+                Create Patient Profile
               </h3>
               <button className="btn btn--ghost" style={{ padding: "4px 8px" }} onClick={() => setShowNewPatientModal(false)}>
                 <X size={18} />
@@ -977,7 +790,7 @@ function App() {
               <input
                 className="chat-input-field"
                 style={{ width: "100%" }}
-                placeholder="e.g. Arthur Pendelton"
+                placeholder="e.g. John Doe"
                 value={newPatientName}
                 onChange={(e) => setNewPatientName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreatePatient()}
@@ -996,6 +809,53 @@ function App() {
         </div>
       )}
 
+      {/* Delete Patient Confirmation Modal */}
+      {showDeletePatientModal && (
+        <div className="modal-overlay" onClick={() => !deletingPatient && setShowDeletePatientModal(false)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 18, color: "#DC2626", display: "flex", alignItems: "center", gap: 8 }}>
+                <AlertTriangle size={20} /> Delete Patient?
+              </h3>
+              <button
+                className="btn btn--ghost"
+                style={{ padding: "4px 8px" }}
+                disabled={deletingPatient}
+                onClick={() => setShowDeletePatientModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ fontSize: 14, color: "var(--text-main)", lineHeight: 1.6, marginBottom: 16 }}>
+              This action will permanently delete the patient and all associated medical reports, AI analysis, chat history, diagnoses, medications, laboratory results, allergies, procedures, and uploaded files.
+            </div>
+
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#DC2626", marginBottom: 24 }}>
+              This action cannot be undone.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button
+                className="btn btn--ghost"
+                disabled={deletingPatient}
+                onClick={() => setShowDeletePatientModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn"
+                style={{ background: "#DC2626", color: "#FFFFFF", border: "none" }}
+                disabled={deletingPatient}
+                onClick={handleDeletePatient}
+              >
+                <Trash2 size={16} /> {deletingPatient ? "Deleting..." : "Delete Patient"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Raw Document Text Modal */}
       {viewDocModal && (
         <div className="modal-overlay" onClick={() => setViewDocModal(null)}>
@@ -1006,7 +866,7 @@ function App() {
                   {viewDocModal.filename}
                 </h3>
                 <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                  {viewDocModal.hospital || viewDocModal.provider} • {viewDocModal.report_date || viewDocModal.visit_date}
+                  {viewDocModal.hospital || viewDocModal.provider} • {viewDocModal.report_date}
                 </span>
               </div>
               <button className="btn btn--ghost" style={{ padding: "4px 8px" }} onClick={() => setViewDocModal(null)}>

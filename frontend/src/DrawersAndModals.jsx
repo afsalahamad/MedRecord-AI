@@ -33,7 +33,7 @@ export function UploadModal({ isOpen, onClose, onUpload, uploading }) {
         </div>
 
         <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 16px" }}>
-          Gemini vision will process your PDF or image file, extract raw text, and construct structured medication & lab JSON schemas.
+          PDF files are uploaded securely to Supabase Storage and parsed with Gemini Vision OCR.
         </p>
 
         <div className="dropzone" onClick={() => document.getElementById("modal-file-input").click()}>
@@ -42,7 +42,7 @@ export function UploadModal({ isOpen, onClose, onUpload, uploading }) {
             {selectedFile ? selectedFile.name : "Click or drag medical file to upload"}
           </h4>
           <p style={{ margin: 0, fontSize: 12, color: "var(--ink-muted)" }}>
-            Supports PDF, PNG, JPG, JPEG (Native Vision OCR Parsing)
+            Supports PDF, PNG, JPG, JPEG
           </p>
           <input
             id="modal-file-input"
@@ -74,7 +74,7 @@ export function UploadModal({ isOpen, onClose, onUpload, uploading }) {
           <div style={{ marginTop: 16, background: "var(--accent-teal-soft)", padding: 12, borderRadius: 6, display: "flex", alignItems: "center", gap: 10 }}>
             <span className="pulse-dot" />
             <span style={{ fontSize: 13, fontWeight: 500, color: "var(--accent-teal)" }}>
-              Processing OCR vision extraction with Gemini API...
+              Processing document with Gemini API & storing in Supabase...
             </span>
           </div>
         )}
@@ -84,7 +84,7 @@ export function UploadModal({ isOpen, onClose, onUpload, uploading }) {
             Cancel
           </button>
           <button className="btn" disabled={!selectedFile || uploading} onClick={handleSubmit}>
-            Extract Document with Gemini →
+            Upload to Supabase →
           </button>
         </div>
       </div>
@@ -117,17 +117,17 @@ export function CreatePatientModal({ isOpen, onClose, onCreate }) {
         </div>
 
         <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "0 0 16px" }}>
-          Add a new patient entry into the local SQLite database.
+          Add a new patient entry into the Supabase database.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-soft)", display: "block", marginBottom: 4 }}>
-              Full Legal Name
+              Full Name
             </label>
             <input
               style={{ width: "100%" }}
-              placeholder="e.g. Dr. Sarah Lin"
+              placeholder="e.g. John Doe"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -172,45 +172,12 @@ export function ConflictDetailDrawer({ isOpen, onClose, conflict }) {
           {conflict.detail || "Discrepancy detected across multiple document sources requiring physician reconciliation."}
         </p>
 
-        <div style={{ background: "var(--bg-exam)", padding: 16, borderRadius: 8, border: "1px solid var(--hairline)", marginBottom: 20 }}>
-          <h4 style={{ margin: "0 0 10px", fontSize: 13, color: "var(--accent-teal)" }}>
-            Cross-Document Evidence Comparison
-          </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 12.5 }}>
-            <div style={{ background: "#FFFFFF", padding: 10, borderRadius: 4, borderLeft: "3px solid var(--flag-red)" }}>
-              <strong>Mercy General Hospital Discharge (Jan 15, 2026):</strong>
-              <div className="data-value" style={{ marginTop: 2, color: "var(--flag-red)" }}>Lisinopril 20mg PO QD</div>
-            </div>
-            <div style={{ background: "#FFFFFF", padding: 10, borderRadius: 4, borderLeft: "3px solid var(--accent-teal)" }}>
-              <strong>St. Jude Nephrology Consult (Nov 20, 2025):</strong>
-              <div className="data-value" style={{ marginTop: 2, color: "var(--accent-teal)" }}>Lisinopril 10mg PO QD (Dose reduced for eGFR 54)</div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 24 }}>
-          <h4 style={{ margin: "0 0 10px", fontSize: 13, color: "var(--ink)" }}>
-            Physician Action Plan Checklist
-          </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-              <input type="checkbox" defaultChecked /> Reconcile 10mg vs 20mg Lisinopril target dose with prescribing cardiologist.
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-              <input type="checkbox" defaultChecked /> Order repeat BMP (Basic Metabolic Panel) for Creatinine and Potassium within 3 days.
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-              <input type="checkbox" /> Evaluate necessity of dual RAAS blockade (Lisinopril + Spironolactone).
-            </label>
-          </div>
-        </div>
-
         <div style={{ marginTop: "auto", display: "flex", gap: 10 }}>
           <button className="btn btn--ghost" style={{ flex: 1 }} onClick={onClose}>
             Close Drawer
           </button>
-          <button className="btn" style={{ flex: 1 }} onClick={() => { alert("Action saved to patient chart!"); onClose(); }}>
-            <CheckCircle2 size={14} /> Confirm Resolution
+          <button className="btn" style={{ flex: 1 }} onClick={onClose}>
+            <CheckCircle2 size={14} /> Close
           </button>
         </div>
       </div>
@@ -218,7 +185,7 @@ export function ConflictDetailDrawer({ isOpen, onClose, conflict }) {
   );
 }
 
-export function ExportReportModal({ isOpen, onClose, patient }) {
+export function ExportReportModal({ isOpen, onClose, patient, analysis }) {
   if (!isOpen) return null;
 
   return (
@@ -227,10 +194,10 @@ export function ExportReportModal({ isOpen, onClose, patient }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: "1px solid var(--hairline)", paddingBottom: 12 }}>
           <div>
             <h3 style={{ margin: 0, fontSize: 18, color: "var(--accent-teal)" }}>
-              Clinical Intelligence Executive Summary
+              Clinical Executive Summary
             </h3>
             <span className="data-value" style={{ fontSize: 11, color: "var(--ink-muted)" }}>
-              Generated on {new Date().toLocaleDateString()} • Ground-Truth Verified
+              Generated on {new Date().toLocaleDateString()}
             </span>
           </div>
           <button className="btn btn--ghost btn--sm" onClick={onClose} style={{ border: "none" }}>
@@ -241,25 +208,14 @@ export function ExportReportModal({ isOpen, onClose, patient }) {
         <div style={{ background: "var(--bg-exam)", padding: 20, borderRadius: 8, border: "1px solid var(--hairline)", fontSize: 13, lineHeight: 1.6 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14, borderBottom: "1px solid var(--hairline)", paddingBottom: 8 }}>
             <div>
-              <strong>Patient Name:</strong> {patient?.name || "Eleanor Vance"} <br />
-              <strong>MRN:</strong> {patient?.mrn || "MRN-889241"}
-            </div>
-            <div>
-              <strong>Primary Care:</strong> {patient?.pcp || "Dr. Robert Vance"} <br />
-              <strong>Risk Level:</strong> <span style={{ color: "var(--flag-red)", fontWeight: 600 }}>High Risk</span>
+              <strong>Patient Name:</strong> {patient?.name || "Patient"}
             </div>
           </div>
 
           <h4 style={{ margin: "0 0 6px", color: "var(--accent-teal)" }}>Executive Overview</h4>
           <p style={{ margin: "0 0 12px" }}>
-            Patient presents with multi-facility clinical documentation showing Stage 3a CKD (eGFR 48 mL/min) and rising serum creatinine (1.1 → 1.9 mg/dL). Cross-document deterministic auditing flagged an active Lisinopril 20mg vs 10mg dosage discrepancy between hospital discharge and outpatient nephrology consultation.
+            {analysis?.ai_summary || "Clinical report analysis extracted from uploaded medical documents."}
           </p>
-
-          <h4 style={{ margin: "0 0 6px", color: "var(--accent-teal)" }}>Active Medication Conflicts</h4>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li><strong>Lisinopril:</strong> Discharge summary specifies 20mg QD; Nephrology consult lowered to 10mg QD due to renal stress.</li>
-            <li><strong>Metformin:</strong> Discharge summary lists 1000mg BID; Nephrology consult reduced to 500mg BID.</li>
-          </ul>
         </div>
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 }}>
