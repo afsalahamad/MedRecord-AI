@@ -21,7 +21,7 @@ import {
   FileCheck
 } from "lucide-react";
 
-const API = import.meta.env.VITE_API_BASE || "http://localhost:8000" || https://medrecord-ai.afzalahmed12598.workers.dev;
+const API = import.meta.env.VITE_API_BASE || "http://localhost:8000" || "https://medrecord-ai.afzalahmed12598.workers.dev";
 
 const WELCOME_CHAT_MSG = {
   sender: "ai",
